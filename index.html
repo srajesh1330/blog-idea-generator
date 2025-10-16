@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trend Scout: Daily Blogging Idea Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- 
+        *** IMPORTANT FOR ADSENSE APPROVAL *** Place the AdSense Auto Ads code snippet provided by Google 
+        directly below this comment, before any other scripts or styles.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f9;
+        }
+        .card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .trend-item {
+            transition: all 0.3s ease;
+        }
+        .trend-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(126, 34, 206, 0.2);
+            background-color: #f3e8ff;
+        }
+        .idea-box {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
+
+    <div class="w-full max-w-4xl space-y-8">
+        <header class="text-center p-6 bg-white card rounded-xl">
+            <h1 class="text-4xl font-extrabold text-purple-700">🔮 Trend Scout</h1>
+            <p class="text-gray-600 mt-2 text-lg">Find today's viral topics and generate high-earning blog ideas instantly.</p>
+
+            <!-- Navigation Links for Compliance Pages -->
+            <nav class="mt-4 flex justify-center space-x-4 text-sm font-medium">
+                <a href="#" id="navMain" class="text-purple-600 hover:text-purple-800 underline">Main App</a>
+                <a href="#" id="navPrivacy" class="text-gray-600 hover:text-purple-600">Privacy Policy</a>
+                <a href="#" id="navTerms" class="text-gray-600 hover:text-purple-600">Terms of Service</a>
+                <a href="#" id="navContact" class="text-gray-600 hover:text-purple-600">Contact Us</a>
+            </nav>
+        </header>
+
+        <!-- Main Application View -->
+        <div id="mainAppView" class="w-full space-y-8">
+            
+            <!-- Display Ad Placeholder - Replace with AdSense code upon approval -->
+            <div class="w-full bg-gray-200 h-20 flex items-center justify-center rounded-xl my-4 border-dashed border-2 border-gray-400 text-gray-700 text-sm font-semibold">
+                TOP LEADERBOARD AD UNIT (728x90) - Passive Revenue 
+            </div>
+
+            <!-- Main Action Card -->
+            <div class="bg-white p-6 md:p-8 rounded-xl card space-y-6">
+                <div id="authStatus" class="text-center text-sm font-medium text-gray-500 break-words">Initializing services...</div>
+                
+                <!-- Trend Filters Section -->
+                <div id="trendFilters" class="space-y-4 p-4 border border-purple-300 rounded-lg bg-purple-50">
+                    <h3 class="text-lg font-semibold text-purple-700 flex items-center">
+                        <span class="mr-2">Filter Trends</span>
+                        <span class="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">PRO</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Region Filter -->
+                        <div>
+                            <label for="regionFilter" class="block text-sm font-medium text-gray-700 mb-1">Region Focus</label>
+                            <select id="regionFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-150">
+                                <option value="Global">Global (Default)</option>
+                                <option value="US">United States</option>
+                                <option value="UK">United Kingdom</option>
+                                <option value="IN">India</option>
+                            </select>
+                        </div>
+                        <!-- Niche Filter -->
+                        <div>
+                            <label for="nicheFilter" class="block text-sm font-medium text-gray-700 mb-1">Niche Category</label>
+                            <select id="nicheFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-150">
+                                <option value="Entertainment, Tech, General News">General Mix (Default)</option>
+                                <option value="Finance and Investing">Finance & Investing</option>
+                                <option value="Health and Wellness">Health & Wellness</option>
+                                <option value="Gaming and Esports">Gaming & Esports</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="fetchTrendsButton"
+                        class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 disabled:opacity-50 flex items-center justify-center">
+                    <span id="buttonText">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="display:none;" id="loadingSpinner">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        What's Trending TODAY?
+                    </span>
+                </button>
+                <p id="errorMsg" class="text-red-500 text-sm text-center font-medium" style="display:none;"></p>
+            </div>
+
+            <!-- Trend Results Area -->
+            <div id="trendsOutput" class="space-y-4">
+                <h2 class="text-2xl font-semibold text-gray-700">Current Trending Topics:</h2>
+                <div id="trendList" class="grid gap-4">
+                    <!-- Trends will be injected here -->
+                    <p id="placeholderText" class="text-gray-500 p-4 bg-white rounded-lg border border-gray-200">Click "What's Trending TODAY?" to fetch real-time data and start brainstorming!</p>
+                </div>
+            </div>
+
+            <!-- Idea Generator Area -->
+            <div id="ideaGenerator" class="bg-purple-50 p-6 md:p-8 rounded-xl card border-2 border-purple-200 idea-box" style="display:none;">
+                <h2 class="text-2xl font-bold text-purple-700 mb-4">💡 Viral Blog Idea Generator</h2>
+                <div id="ideaContent">
+                    <!-- Generated idea will be injected here -->
+                    <p class="text-gray-600">Click on a trend above to turn it into an actionable blog post idea!</p>
+                </div>
+                
+                <!-- Contextual Affiliate Box (HIGH-INTENT REVENUE) -->
+                <div id="affiliateBox" class="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 rounded shadow-md" style="display:none;">
+                    <p class="font-bold text-yellow-800 text-lg">🚀 Ready to Write? Get it Done Faster.</p>
+                    <p class="text-yellow-700 text-sm mt-1">Don't spend hours writing. Use the best AI tool to draft this entire post in minutes. <a href="[YOUR_AI_WRITING_AFFILIATE_LINK]" target="_blank" class="font-bold underline hover:text-yellow-900">Start Writing Now! (Affiliate Link)</a></p>
+                </div>
+
+                <!-- Copy and Save Actions -->
+                <div id="ideaActions" class="mt-6 space-y-4 md:space-y-0 md:flex md:space-x-4">
+                    <button id="copyHeadlineButton" style="display:none;" 
+                            class="w-full md:w-1/3 bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-300 disabled:opacity-50 text-sm">
+                        📋 Copy Headline
+                    </button>
+                    <button id="copyPitchButton" style="display:none;" 
+                            class="w-full md:w-1/3 bg-purple-500 text-white py-2 rounded-lg font-semibold hover:bg-purple-600 transition duration-300 disabled:opacity-50 text-sm">
+                        ✍️ Copy Pitch
+                    </button>
+                    <button id="saveIdeaButton" style="display:none;" 
+                            class="w-full md:w-1/3 bg-green-500 text-white py-2 rounded-lg font-semibold hover:bg-green-600 transition duration-300 disabled:opacity-50 text-sm">
+                        💾 Save Idea
+                    </button>
+                </div>
+                
+                <div id="sourcesArea" class="mt-4 border-t pt-4 text-sm text-gray-500" style="display:none;">
+                    <p class="font-semibold mb-1">Sources for Trend Data:</p>
+                    <ul id="sourceList" class="list-disc list-inside space-y-1 text-xs"></ul>
+                </div>
+            </div>
+
+            <!-- Saved Ideas Area -->
+            <div id="savedIdeasOutput" class="space-y-4 pt-4 border-t border-gray-300">
+                <h2 class="text-2xl font-semibold text-gray-700">✍️ Your Saved Ideas</h2>
+                <div id="savedIdeaList" class="space-y-3">
+                    <p class="text-gray-500 p-4 bg-white rounded-lg border border-gray-200" id="savedIdeasPlaceholder">Sign in to save and view your best ideas here.</p>
+                    <!-- Saved ideas will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Information/Legal Pages View (Initially Hidden) -->
+        <div id="infoPageView" class="w-full space-y-8 p-6 bg-white card rounded-xl" style="display:none;">
+            <!-- Content will be injected here by the showPage function -->
+        </div>
+
+    </div>
+
+    <script type="module">
+        // --- Firebase Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel, addDoc, collection, query, onSnapshot, orderBy, serverTimestamp, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Global Variables (Mandatory Canvas Setup) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // --- State and DOM Element References ---
+        let auth, db;
+        let userId = null;
+        let currentIdea = null; 
+
+        const authStatus = document.getElementById('authStatus');
+        const fetchTrendsButton = document.getElementById('fetchTrendsButton');
+        const trendList = document.getElementById('trendList');
+        const ideaGenerator = document.getElementById('ideaGenerator');
+        const ideaContent = document.getElementById('ideaContent');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const buttonText = document.getElementById('buttonText');
+        const errorMsg = document.getElementById('errorMsg');
+        const placeholderText = document.getElementById('placeholderText');
+        const sourcesArea = document.getElementById('sourcesArea');
+        const sourceList = document.getElementById('sourceList');
+        const saveIdeaButton = document.getElementById('saveIdeaButton');
+        const copyHeadlineButton = document.getElementById('copyHeadlineButton');
+        const copyPitchButton = document.getElementById('copyPitchButton');
+        const savedIdeaList = document.getElementById('savedIdeaList');
+        const savedIdeasPlaceholder = document.getElementById('savedIdeasPlaceholder');
+        const affiliateBox = document.getElementById('affiliateBox'); 
+        
+        // Filter Elements
+        const regionFilter = document.getElementById('regionFilter');
+        const nicheFilter = document.getElementById('nicheFilter');
+
+        // Navigation Elements
+        const mainAppView = document.getElementById('mainAppView');
+        const infoPageView = document.getElementById('infoPageView');
+        const navMain = document.getElementById('navMain');
+        const navPrivacy = document.getElementById('navPrivacy');
+        const navTerms = document.getElementById('navTerms');
+        const navContact = document.getElementById('navContact');
+
+
+        // Set up Exponential Backoff for API calls
+        const MAX_RETRIES = 5;
+        const BASE_DELAY_MS = 1000;
+
+        // --- Firebase Initialization and Authentication ---
+
+        async function initFirebaseAndAuth() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    setLogLevel('Debug'); 
+
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            authStatus.innerHTML = `<span class="text-purple-600">Authenticated.</span> User ID: <code class="bg-gray-100 p-1 rounded text-xs">${userId}</code>`;
+                            loadSavedIdeas();
+                        } else if (initialAuthToken) {
+                            // Use custom token if available
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            // Anonymous sign-in if no token
+                            await signInAnonymously(auth);
+                        }
+                    });
+
+                    // Initial sign-in check for token existence
+                    if (initialAuthToken && !auth.currentUser) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else if (!auth.currentUser) {
+                        await signInAnonymously(auth);
+                    }
+
+                } else {
+                    authStatus.textContent = "Firebase is not configured. Proceeding with LLM feature only.";
+                }
+            } catch (error) {
+                console.error("Firebase/Auth initialization error:", error);
+                authStatus.textContent = `Authentication failed: ${error.message.substring(0, 50)}...`;
+            }
+        }
+
+        // --- Utility Functions ---
+
+        function copyToClipboard(text, buttonElement) {
+            if (!text) return;
+            // Create a temporary textarea element
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; 
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            
+            // Select and copy
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            // Give visual feedback
+            const originalText = buttonElement.textContent;
+            buttonElement.textContent = '✅ Copied!';
+            setTimeout(() => {
+                buttonElement.textContent = originalText;
+            }, 1500);
+        }
+
+        // --- Firestore Persistence ---
+
+        function getCollectionPath(collectionName) {
+            if (userId) {
+                // Private user data collection
+                return `artifacts/${appId}/users/${userId}/${collectionName}`;
+            }
+            console.warn("Attempted to access Firestore without a user ID.");
+            return null;
+        }
+
+        async function saveIdea() {
+            if (!userId || !currentIdea) {
+                // In a real app, show a custom modal for "Please sign in"
+                console.error("Cannot save: User not authenticated or no current idea.");
+                return;
+            }
+
+            saveIdeaButton.disabled = true;
+            saveIdeaButton.textContent = "Saving...";
+
+            try {
+                const path = getCollectionPath('saved_ideas');
+                if (!path) return;
+
+                await addDoc(collection(db, path), {
+                    headline: currentIdea.headline,
+                    pitch: currentIdea.pitch,
+                    trendTopic: currentIdea.trendTopic,
+                    createdAt: serverTimestamp()
+                });
+
+                saveIdeaButton.textContent = "✅ Saved!";
+                setTimeout(() => {
+                    saveIdeaButton.textContent = "💾 Save Idea";
+                    saveIdeaButton.disabled = false;
+                }, 2000);
+
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                saveIdeaButton.textContent = "Error saving!";
+                saveIdeaButton.disabled = false;
+            }
+        }
+
+        async function deleteIdea(docId) {
+            if (!userId) {
+                console.error("Cannot delete: User not authenticated.");
+                return;
+            }
+
+            try {
+                const collectionPath = getCollectionPath('saved_ideas');
+                if (!collectionPath) return;
+
+                const docRef = doc(db, collectionPath, docId);
+                await deleteDoc(docRef);
+                // UI updates via onSnapshot
+            } catch (e) {
+                console.error("Error deleting document: ", e);
+            }
+        }
+
+        function loadSavedIdeas() {
+            const path = getCollectionPath('saved_ideas');
+            if (!path) {
+                savedIdeasPlaceholder.textContent = "Cannot load ideas: Authentication is still pending.";
+                return;
+            }
+
+            savedIdeasPlaceholder.style.display = 'block';
+            savedIdeaList.innerHTML = '';
+            savedIdeasPlaceholder.textContent = "Loading saved ideas...";
+
+            // Use onSnapshot for real-time updates
+            const q = query(collection(db, path), orderBy("createdAt", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                savedIdeaList.innerHTML = '';
+                savedIdeasPlaceholder.style.display = 'none';
+
+                if (snapshot.empty) {
+                    savedIdeasPlaceholder.textContent = "You haven't saved any ideas yet. Start scouting!";
+                    savedIdeasPlaceholder.style.display = 'block';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const idea = doc.data();
+                    const docId = doc.id; 
+                    const itemEl = document.createElement('div');
+                    
+                    itemEl.className = 'p-4 bg-white rounded-lg border border-green-200 shadow-md flex justify-between items-start';
+                    itemEl.innerHTML = `
+                        <div class="flex-grow pr-4">
+                            <p class="text-lg font-bold text-green-700">${idea.headline}</p>
+                            <p class="text-sm text-gray-500 mb-2">Topic: ${idea.trendTopic.split(' - ')[0]}</p>
+                            <p class="text-gray-700 text-sm italic">${idea.pitch.substring(0, 100)}...</p>
+                        </div>
+                        <button data-doc-id="${docId}" class="delete-btn text-red-500 hover:text-red-700 transition duration-150 p-1 rounded-full hover:bg-red-100" title="Delete Idea">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    `;
+                    savedIdeaList.appendChild(itemEl);
+                });
+
+                // Attach event listeners after all elements are appended
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const docId = e.currentTarget.getAttribute('data-doc-id');
+                        if (docId) {
+                            deleteIdea(docId);
+                        }
+                    });
+                });
+
+            }, (error) => {
+                console.error("Error listening to saved ideas:", error);
+                savedIdeasPlaceholder.textContent = "Error loading saved ideas.";
+                savedIdeasPlaceholder.style.display = 'block';
+            });
+        }
+        
+        // --- Page Navigation Logic (Essential for AdSense Compliance Pages) ---
+
+        function showPage(pageId) {
+            // Reset all views
+            mainAppView.style.display = 'none';
+            infoPageView.style.display = 'none';
+
+            // Reset navigation colors and style the active link
+            const navs = [navMain, navPrivacy, navTerms, navContact];
+            navs.forEach(nav => {
+                nav.className = "text-gray-600 hover:text-purple-600";
+            });
+
+            if (pageId === 'main') {
+                mainAppView.style.display = 'block';
+                navMain.className = "text-purple-600 hover:text-purple-800 underline";
+            } else {
+                infoPageView.style.display = 'block';
+                let content = '';
+                let activeNav;
+
+                if (pageId === 'privacy') {
+                    activeNav = navPrivacy;
+                    content = `
+                        <h2 class="text-3xl font-bold text-purple-700 mb-4">Privacy Policy</h2>
+                        <p class="text-sm text-gray-600 mb-4">Effective Date: October 17, 2025</p>
+                        <div class="space-y-4 text-gray-700">
+                            <p><strong>1. Data Collected:</strong> We use Firebase Authentication to manage your session. This generates a unique, anonymous User ID (UID) to save your 'Saved Ideas' privately in Google Cloud Firestore. We do not collect or store personal identifying information (like names or emails).</p>
+                            <p><strong>2. Third-Party Services:</strong> This application uses Google's Gemini API (via the Canvas environment) for generating content and Google Search for trending topics. These services are managed by Google and subject to their respective privacy policies. We also use Google Firestore for data storage.</p>
+                            <p><strong>3. Data Retention:</strong> Your saved ideas are linked to your anonymous User ID. If you clear your browser data or if your anonymous session expires, your UID may change, and the saved data may become inaccessible.</p>
+                            <p><strong>4. AdSense:</strong> We display ads from Google AdSense. Google uses cookies to serve ads based on your prior visits to this and other websites. You may opt out of personalized advertising by visiting Google's Ads Settings.</p>
+                        </div>
+                    `;
+                } else if (pageId === 'terms') {
+                    activeNav = navTerms;
+                    content = `
+                        <h2 class="text-3xl font-bold text-purple-700 mb-4">Terms of Service</h2>
+                        <div class="space-y-4 text-gray-700">
+                            <p><strong>1. Content Usage:</strong> All blog ideas and pitches generated by Trend Scout are provided for informational and creative use. You are fully responsible for the content you create and publish based on these ideas, including ensuring compliance with copyright and libel laws.</p>
+                            <p><strong>2. Service Availability:</strong> Trend Scout is provided "as is" and we cannot guarantee uninterrupted access or error-free service. We reserve the right to modify or discontinue the service at any time.</p>
+                            <p><strong>3. Prohibited Use:</strong> You may not use the generated content for illegal activities, harassment, or to promote hate speech.</p>
+                            <p><strong>4. Limitation of Liability:</strong> We are not liable for any damages or losses related to your use of the application or the content generated.</p>
+                        </div>
+                    `;
+                } else if (pageId === 'contact') {
+                    activeNav = navContact;
+                    content = `
+                        <h2 class="text-3xl font-bold text-purple-700 mb-4">Contact Us</h2>
+                        <p class="text-gray-700">For support, bug reports, or business inquiries, please use the following email address:</p>
+                        <p class="text-xl font-semibold text-purple-600">support@trendscoutapp.com</p>
+                        <p class="text-sm text-gray-500 mt-4">We aim to respond to all inquiries within 48 hours.</p>
+                    `;
+                }
+
+                infoPageView.innerHTML = content;
+                if (activeNav) {
+                    activeNav.className = "text-purple-600 hover:text-purple-800 underline";
+                }
+            }
+        }
+
+        // --- LLM API Call Utilities (With Exponential Backoff) ---
+        async function fetchWithRetry(url, options, retryCount = 0) {
+            try {
+                const response = await fetch(url, options);
+                if (response.status === 429 && retryCount < MAX_RETRIES) {
+                    const delay = BASE_DELAY_MS * Math.pow(2, retryCount) + Math.random() * BASE_DELAY_MS;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithRetry(url, options, retryCount + 1);
+                }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (retryCount < MAX_RETRIES) {
+                    const delay = BASE_DELAY_MS * Math.pow(2, retryCount) + Math.random() * BASE_DELAY_MS;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithRetry(url, options, retryCount + 1);
+                }
+                throw new Error("Failed to connect to the API after multiple retries.");
+            }
+        }
+
+        async function generateContent(userQuery, systemPrompt, useSearch = false) {
+            const apiKey = ""; 
+            const model = "gemini-2.5-flash-preview-09-2025";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: useSearch ? [{ "google_search": {} }] : undefined,
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            const options = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            };
+
+            const response = await fetchWithRetry(apiUrl, options);
+            const result = await response.json();
+
+            const candidate = result.candidates?.[0];
+
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                const text = candidate.content.parts[0].text;
+                let sources = [];
+                const groundingMetadata = candidate.groundingMetadata;
+                if (useSearch && groundingMetadata && groundingMetadata.groundingAttributions) {
+                    sources = groundingMetadata.groundingAttributions
+                        .map(attribution => ({
+                            uri: attribution.web?.uri,
+                            title: attribution.web?.title,
+                        }))
+                        .filter(source => source.uri && source.title);
+                }
+                return { text, sources };
+            } else {
+                throw new Error(result.error?.message || "Could not generate content. Check the console for details.");
+            }
+        }
+
+
+        // --- Event Handlers and Main Logic ---
+
+        async function fetchTrends() {
+            fetchTrendsButton.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            buttonText.childNodes[1].nodeValue = ' Fetching trends...';
+            errorMsg.style.display = 'none';
+            placeholderText.style.display = 'none';
+            trendList.innerHTML = '';
+            ideaGenerator.style.display = 'none';
+            saveIdeaButton.style.display = 'none';
+            copyHeadlineButton.style.display = 'none';
+            copyPitchButton.style.display = 'none';
+            affiliateBox.style.display = 'none'; 
+            currentIdea = null;
+
+            try {
+                // Get filter values
+                const selectedRegion = regionFilter.value;
+                const selectedNiche = nicheFilter.value;
+
+                // Query the LLM with search grounding, incorporating filters
+                const systemPrompt = "You are a data extractor for a blogging tool. Based on your Google search results, extract the top 8 most discussed trending topics and provide a very short, specific summary for each. Format your response as a numbered list where each item is on a new line: '1. Topic Name - Short Summary'. Do not include any introductory or concluding text.";
+                
+                const userQuery = `What are the top 8 trending topics and associated news headlines right now for the region: "${selectedRegion}"? Focus specifically on these niches: "${selectedNiche}".`;
+                
+                const { text, sources } = await generateContent(userQuery, systemPrompt, true);
+
+                // Process the raw text output
+                const trends = text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.match(/^\d+\.\s/))
+                    .map(line => line.substring(line.indexOf('.') + 1).trim());
+
+                if (trends.length === 0) {
+                    throw new Error("Could not extract a list of trends from the API response.");
+                }
+
+                trends.forEach((trend, index) => {
+                    const trendEl = document.createElement('div');
+                    trendEl.className = 'trend-item p-4 bg-white rounded-lg border border-purple-200 cursor-pointer shadow-sm hover:shadow-lg transition duration-200';
+                    trendEl.innerHTML = `<p class="font-semibold text-gray-800"><span class="text-purple-600 mr-2">${index + 1}.</span>${trend}</p>
+                                         <p class="text-sm text-purple-500 mt-1">Click for Viral Idea & Headline!</p>`;
+                    
+                    trendEl.addEventListener('click', () => generateIdea(trend));
+                    trendList.appendChild(trendEl);
+                });
+
+                // Display sources
+                if (sources.length > 0) {
+                    sourceList.innerHTML = sources.map(s => `<li><a href="${s.uri}" target="_blank" class="text-purple-600 hover:text-purple-800 underline">${s.title}</a></li>`).join('');
+                    sourcesArea.style.display = 'block';
+                } else {
+                    sourcesArea.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error("Error fetching trends:", error);
+                errorMsg.textContent = `Error: ${error.message}`;
+                errorMsg.style.display = 'block';
+                placeholderText.style.display = 'block';
+                trendList.innerHTML = ''; // Clear list on error
+            } finally {
+                fetchTrendsButton.disabled = false;
+                loadingSpinner.style.display = 'none';
+                buttonText.childNodes[1].nodeValue = "What's Trending TODAY?";
+            }
+        }
+
+        async function generateIdea(trendTopic) {
+            ideaGenerator.style.display = 'block';
+            saveIdeaButton.style.display = 'none';
+            copyHeadlineButton.style.display = 'none';
+            copyPitchButton.style.display = 'none';
+            affiliateBox.style.display = 'none'; 
+            currentIdea = null;
+
+            ideaContent.innerHTML = `<div class="flex items-center justify-center space-x-2 text-purple-600">
+                                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Generating viral idea for: ${trendTopic.split(' - ')[0]}...</span>
+                                    </div>`;
+            sourcesArea.style.display = 'none'; 
+
+            try {
+                const systemPrompt = "You are a viral content creation expert and SEO specialist. Your task is to turn a given trending topic into a high-click, high-monetization blog post headline and concept. The tone must be exciting, shocking, and highly persuasive.";
+                const userQuery = `Generate an eye-catching, SEO-optimized blog post headline (H1) and a short, persuasive, 3-point blog post pitch (introduction, main argument, monetization strategy) for the following trending topic: "${trendTopic}". Use Markdown formatting for the final output.`;
+                
+                const { text } = await generateContent(userQuery, systemPrompt, false);
+                
+                // Extract headline and pitch
+                const headlineMatch = text.match(/#\s*(.+)/);
+                const headline = headlineMatch ? headlineMatch[1].trim() : 'Headline Could Not Be Extracted';
+                const rawPitch = text.replace(/#\s*(.+)/, '').trim();
+
+                // Store the current idea object
+                currentIdea = { headline, pitch: rawPitch, trendTopic };
+
+                // Format the output for display
+                const formattedHtml = `
+                    <p class="text-sm font-medium text-gray-500 mb-2">Trend Focus: ${trendTopic}</p>
+                    <div class="p-4 bg-purple-100 rounded-lg border-l-4 border-purple-500">
+                        <h3 class="text-xl font-bold text-purple-800 mb-2">Headline:</h3>
+                        <p class="text-2xl font-extrabold text-gray-900" id="currentHeadline">${headline}</p>
+                    </div>
+                    <div class="mt-4 text-gray-700 space-y-3">
+                        <h3 class="text-xl font-bold text-purple-800 mb-2">The Pitch:</h3>
+                        ${rawPitch.split('\n').map(p => `<p>${p}</p>`).join('')}
+                    </div>
+                `;
+
+                ideaContent.innerHTML = formattedHtml;
+                saveIdeaButton.style.display = 'block';
+                copyHeadlineButton.style.display = 'block';
+                copyPitchButton.style.display = 'block';
+                affiliateBox.style.display = 'block'; 
+
+            } catch (error) {
+                console.error("Error generating idea:", error);
+                ideaContent.innerHTML = `<p class="text-red-500">Sorry, could not generate an idea for that trend. Please try another one.</p>`;
+                saveIdeaButton.style.display = 'none';
+                copyHeadlineButton.style.display = 'none';
+                copyPitchButton.style.display = 'none';
+                affiliateBox.style.display = 'none'; 
+            }
+        }
+
+
+        // --- Startup and Event Listeners ---
+        
+        // Add event listeners for navigation
+        navMain.addEventListener('click', (e) => { e.preventDefault(); showPage('main'); });
+        navPrivacy.addEventListener('click', (e) => { e.preventDefault(); showPage('privacy'); });
+        navTerms.addEventListener('click', (e) => { e.preventDefault(); showPage('terms'); });
+        navContact.addEventListener('click', (e) => { e.preventDefault(); showPage('contact'); });
+
+        fetchTrendsButton.addEventListener('click', fetchTrends);
+        saveIdeaButton.addEventListener('click', saveIdea);
+        
+        // Copy Button Event Listeners
+        copyHeadlineButton.addEventListener('click', () => {
+            if (currentIdea) {
+                copyToClipboard(currentIdea.headline, copyHeadlineButton);
+            }
+        });
+        copyPitchButton.addEventListener('click', () => {
+            if (currentIdea) {
+                // Combine headline and pitch for a full copy
+                const textToCopy = `Headline: ${currentIdea.headline}\n\nPitch:\n${currentIdea.pitch.split('\n').map(p => p.trim()).join('\n')}`;
+                copyToClipboard(textToCopy, copyPitchButton);
+            }
+        });
+        
+        initFirebaseAndAuth();
+        showPage('main'); // Start by showing the main application view
+
+    </script>
+</body>
+</html>
