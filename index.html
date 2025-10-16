@@ -53,7 +53,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, addDoc, serverTimestamp, orderBy, limit, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // ONLY import necessary Firestore functions
+        import { getFirestore, onSnapshot, collection, query, addDoc, serverTimestamp, orderBy, limit, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- GLOBAL SETUP (Required by Canvas) ---
         // 1. Get Environment Variables
@@ -78,6 +79,15 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                
+                // --- EXPOSE FIRESTORE FUNCTIONS TO GLOBAL WINDOW ---
+                // This fixes the 'ReferenceError: query is not defined' in the standard script block
+                window.query = query;
+                window.orderBy = orderBy;
+                window.limit = limit;
+                window.onSnapshot = onSnapshot;
+                window.addDoc = addDoc;
+                window.serverTimestamp = serverTimestamp;
                 
                 // Set global variables for access in the main script block
                 window.db = db;
@@ -122,16 +132,6 @@
             return collection(db, 'artifacts', appId, 'users', window.userId, 'trend_scout_history');
         };
 
-        // 4. Initial Placeholder Data Setup (if needed)
-        window.setupInitialData = async () => {
-            const historyRef = window.getHistoryCollectionRef();
-            const q = query(historyRef, orderBy('timestamp', 'desc'), limit(1));
-            const snapshot = await getDocs(q);
-
-            if (snapshot.empty) {
-                // Initial welcome message (optional)
-            }
-        };
     </script>
 
     <!-- Main Application UI -->
@@ -268,8 +268,8 @@
                     console.error(`Attempt ${i + 1} failed:`, error.message);
                     
                     if (i === maxRetries - 1) {
-                        // If all retries are exhausted, rethrow the error
-                        throw new Error("Failed to connect to the API after multiple retries.");
+                        // If all retries are exhausted, include the last failure message for better diagnosis.
+                        throw new Error(`Failed to connect to the API after multiple retries. Last known error: ${error.message}`);
                     }
 
                     // Exponential backoff delay (1s, 2s, 4s, 8s, 16s, ...)
@@ -306,6 +306,7 @@
                 
                 if (!response.ok) {
                     const errorBody = await response.text();
+                    // Include the failing status in the error for clarity
                     throw new Error(`API call failed with status ${response.status}: ${errorBody}`);
                 }
 
@@ -396,7 +397,7 @@
                         <h3 class="text-lg font-bold text-indigo-900">${idea.niche} Trend for ${idea.region}</h3>
                     </div>
                     <div class="prose max-w-none text-gray-700">
-                        ${idea.content.replace(/\n/g, '<br>')}
+                        ${data.content.replace(/\n/g, '<br>')}
                     </div>
                     ${sourcesHtml}
                 </div>
@@ -423,10 +424,10 @@
                     timestamp: new Date()
                 };
 
-                // Add to Firestore history
-                await addDoc(window.getHistoryCollectionRef(), {
+                // Use window.addDoc and window.serverTimestamp
+                await window.addDoc(window.getHistoryCollectionRef(), {
                     ...newIdea,
-                    timestamp: serverTimestamp() // Use server timestamp for accuracy
+                    timestamp: window.serverTimestamp() // Use server timestamp for accuracy
                 });
 
                 // Display the new idea immediately
@@ -490,10 +491,11 @@
             
             // Set up History Listener
             const historyRef = window.getHistoryCollectionRef();
-            const historyQuery = query(historyRef, orderBy('timestamp', 'desc'), limit(10)); // Last 10 ideas
+            // Use window.query, window.orderBy, and window.limit
+            const historyQuery = window.query(historyRef, window.orderBy('timestamp', 'desc'), window.limit(10)); // Last 10 ideas
 
-            // Real-time listener for history updates
-            onSnapshot(historyQuery, (snapshot) => {
+            // Real-time listener for history updates - use window.onSnapshot
+            window.onSnapshot(historyQuery, (snapshot) => {
                 renderHistory(snapshot);
             }, (error) => {
                 console.error("Error listening to history:", error);
