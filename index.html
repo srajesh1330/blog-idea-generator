@@ -72,55 +72,57 @@
             if (!firebaseConfig) {
                 console.error("Firebase config not found. Cannot initialize Firestore.");
                 document.getElementById('auth-status').innerHTML = '<span class="text-red-500">Error: Firebase config missing.</span>';
-                return;
-            }
-
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // --- EXPOSE FIRESTORE FUNCTIONS TO GLOBAL WINDOW ---
-                // This fixes the 'ReferenceError: query is not defined' in the standard script block
-                window.query = query;
-                window.orderBy = orderBy;
-                window.limit = limit;
-                window.onSnapshot = onSnapshot;
-                window.addDoc = addDoc;
-                window.serverTimestamp = serverTimestamp;
-                
-                // Set global variables for access in the main script block
-                window.db = db;
-                window.auth = auth;
-                
-                // Handle initial authentication
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // Listen for Auth State Changes
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('auth-status').innerHTML = 
-                            `<span class="text-green-600">Authenticated.</span> User ID: <code class="bg-gray-100 p-1 rounded text-xs">${userId}</code>`;
-                        window.userId = userId; // Set global userId
-                        window.initApp(); // Start app logic after auth
+                // Note: We intentionally don't return here to allow the non-Firestore parts of the app to run.
+            } else {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    
+                    // --- EXPOSE FIRESTORE FUNCTIONS TO GLOBAL WINDOW ---
+                    window.query = query;
+                    window.orderBy = orderBy;
+                    window.limit = limit;
+                    window.onSnapshot = onSnapshot;
+                    window.addDoc = addDoc;
+                    window.serverTimestamp = serverTimestamp;
+                    window.db = db;
+                    window.auth = auth;
+                    
+                    // Handle initial authentication
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
                     } else {
-                        userId = 'anonymous-' + crypto.randomUUID();
-                        document.getElementById('auth-status').innerHTML = 
-                            `<span class="text-yellow-600">Anonymous Session.</span> ID: <code class="bg-gray-100 p-1 rounded text-xs">${userId}</code>`;
-                        window.userId = userId; // Set global userId
-                        window.initApp(); // Start app logic after auth
+                        await signInAnonymously(auth);
                     }
-                });
 
-            } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                document.getElementById('auth-status').innerHTML = 
-                    `<span class="text-red-500">Error: Authentication failed.</span>`;
+                    // Listen for Auth State Changes
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            document.getElementById('auth-status').innerHTML = 
+                                `<span class="text-green-600">Authenticated.</span> User ID: <code class="bg-gray-100 p-1 rounded text-xs">${userId}</code>`;
+                            window.userId = userId; // Set global userId
+                            window.initApp(); // Start app logic after auth
+                        } else {
+                            userId = 'anonymous-' + crypto.randomUUID();
+                            document.getElementById('auth-status').innerHTML = 
+                                `<span class="text-yellow-600">Anonymous Session.</span> ID: <code class="bg-gray-100 p-1 rounded text-xs">${userId}</code>`;
+                            window.userId = userId; // Set global userId
+                            window.initApp(); // Start app logic after auth
+                        }
+                    });
+
+                } catch (error) {
+                    console.error("Firebase Initialization Error:", error);
+                    document.getElementById('auth-status').innerHTML = 
+                        `<span class="text-red-500">Error: Authentication failed.</span>`;
+                }
+            }
+            
+            // If Firebase didn't initialize, we still need to run the app logic to allow API calls
+            if (!db) {
+                window.initApp(); 
             }
         }
         
@@ -128,8 +130,10 @@
 
         // 3. Firestore Path Helper
         window.getHistoryCollectionRef = () => {
+             // Check if db is available before trying to access collection
+            if (!window.db) return null; 
              // Storing history as private data under the user's ID
-            return collection(db, 'artifacts', appId, 'users', window.userId, 'trend_scout_history');
+            return collection(window.db, 'artifacts', appId, 'users', window.userId, 'trend_scout_history');
         };
 
     </script>
@@ -345,7 +349,6 @@
         function showLoading(isLoading) {
             const button = document.getElementById('generate-button');
             const loadingIndicator = document.getElementById('loading-indicator');
-            const buttonContent = document.getElementById('button-content');
             const icon = lucide.createIcons();
 
             if (isLoading) {
@@ -397,7 +400,7 @@
                         <h3 class="text-lg font-bold text-indigo-900">${idea.niche} Trend for ${idea.region}</h3>
                     </div>
                     <div class="prose max-w-none text-gray-700">
-                        ${data.content.replace(/\n/g, '<br>')}
+                        ${idea.content.replace(/\n/g, '<br>')}
                     </div>
                     ${sourcesHtml}
                 </div>
@@ -424,11 +427,17 @@
                     timestamp: new Date()
                 };
 
-                // Use window.addDoc and window.serverTimestamp
-                await window.addDoc(window.getHistoryCollectionRef(), {
-                    ...newIdea,
-                    timestamp: window.serverTimestamp() // Use server timestamp for accuracy
-                });
+                // --- Persistence Logic: Only run if Firestore is available ---
+                const historyRef = window.getHistoryCollectionRef();
+                if (historyRef) {
+                    // Use exposed functions from window
+                    await window.addDoc(historyRef, {
+                        ...newIdea,
+                        timestamp: window.serverTimestamp()
+                    });
+                } else {
+                     console.warn("History saving skipped: Firebase not fully initialized due to missing config.");
+                }
 
                 // Display the new idea immediately
                 const resultsContainer = document.getElementById('results-container');
@@ -489,18 +498,24 @@
             // Load icons for the initial UI
             lucide.createIcons();
             
-            // Set up History Listener
+            // Set up History Listener ONLY if history services are available
             const historyRef = window.getHistoryCollectionRef();
-            // Use window.query, window.orderBy, and window.limit
-            const historyQuery = window.query(historyRef, window.orderBy('timestamp', 'desc'), window.limit(10)); // Last 10 ideas
-
-            // Real-time listener for history updates - use window.onSnapshot
-            window.onSnapshot(historyQuery, (snapshot) => {
-                renderHistory(snapshot);
-            }, (error) => {
-                console.error("Error listening to history:", error);
-                document.getElementById('history-container').innerHTML = `<p class="text-red-500 text-center">Failed to load history.</p>`;
-            });
+            if (historyRef && window.query && window.orderBy && window.limit && window.onSnapshot) {
+                const historyQuery = window.query(historyRef, window.orderBy('timestamp', 'desc'), window.limit(10));
+    
+                // Real-time listener for history updates - use window.onSnapshot
+                window.onSnapshot(historyQuery, (snapshot) => {
+                    renderHistory(snapshot);
+                }, (error) => {
+                    console.error("Error listening to history:", error);
+                    document.getElementById('history-container').innerHTML = `<p class="text-red-500 text-center">Failed to load history.</p>`;
+                });
+            } else {
+                // Update history placeholder if Firebase is known to be missing
+                if (!window.db) {
+                    document.getElementById('history-container').innerHTML = `<p class="text-gray-500 italic text-center">History disabled: Firebase configuration is missing.</p>`;
+                }
+            }
             
             // Expose fetchTrends globally for the button click
             window.fetchTrends = fetchTrends;
